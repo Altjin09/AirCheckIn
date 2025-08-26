@@ -1,0 +1,39 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.SignalR.Client
+
+<h1>Departures</h1>
+<table>
+    <thead><tr><th>Time</th><th>Destination</th><th>Flight</th><th>Gate</th><th>Status</th></tr></thead>
+    <tbody>
+        @foreach (var f in flights)
+        {
+            <tr>
+                <td>@f.ScheduledDeparture.ToLocalTime().ToString("HH:mm")</td>
+                <td>@f.To</td>
+                <td>@f.FlightNo</td>
+                <td>@f.Gate</td>
+                <td class="@f.Status.ToLower()">@f.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    record FlightVm(int Id, string FlightNo, string To, string Gate, string Status, DateTime ScheduledDeparture);
+    List<FlightVm> flights = new();
+    HubConnection? hub;
+
+    protected override async Task OnInitializedAsync()
+    {
+        flights = await Http.GetFromJsonAsync<List<FlightVm>>("/api/flight/list") ?? new();
+        hub = new HubConnectionBuilder().WithUrl(Nav.ToAbsoluteUri("/hubs/flights")).WithAutomaticReconnect().Build();
+        hub.On<int, string>("FlightStatusChanged", (id, status) =>
+        {
+            var f = flights.FirstOrDefault(x => x.Id == id);
+            if (f != null) { flights[flights.IndexOf(f)] = f with { Status = status }; StateHasChanged(); }
+        });
+        await hub.StartAsync();
+    }
+}
