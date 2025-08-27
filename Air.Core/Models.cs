@@ -12,7 +12,7 @@ public class Flight
     public string Gate { get; set; } = "A1";
     public FlightStatus Status { get; set; } = FlightStatus.CheckingIn;
     public List<Seat> Seats { get; set; } = new();
-    public byte[] RowVersion { get; set; } = default!;
+    public byte[]? RowVersion { get; set; }
 }
 
 public class Seat
@@ -25,7 +25,7 @@ public class Seat
     public int? AssignedPassengerId { get; set; }
     public DateTime? LockedUntilUtc { get; set; }
     public string? LockedBy { get; set; }
-    public byte[] RowVersion { get; set; } = default!;
+    public byte[]? RowVersion { get; set; }
 }
 
 public class Passenger

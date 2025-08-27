@@ -14,7 +14,14 @@ public class BookingController : ControllerBase
     {
         var q = from b in _db.Bookings.Include(b => b.Passenger).Include(b => b.Flight)
                 where b.Passenger.PassportNo == passport && b.Flight.FlightNo == flightNo
-                select new { b.Id, Passenger = b.Passenger.FullName, b.Passenger.PassportNo, b.Flight.Id, b.Flight.FlightNo };
+                select new
+                {
+                    BookingId = b.Id,
+                    PassengerName = b.Passenger.FullName,
+                    PassportNo = b.Passenger.PassportNo,
+                    FlightId = b.Flight.Id,
+                    FlightNo = b.Flight.FlightNo
+                };
         var r = await q.FirstOrDefaultAsync();
         return r == null ? NotFound() : Ok(r);
     }

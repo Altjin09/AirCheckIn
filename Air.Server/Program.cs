@@ -1,34 +1,36 @@
-using Air.Server.Data;
-using Air.Server.Hubs;
+﻿using Air.Server.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// EF Core + SQLite
+// DbContext → SQLite
 builder.Services.AddDbContext<AppDb>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("db")));
+    opt.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
-// MVC, Swagger, SignalR
-builder.Services.AddControllers();
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSignalR().AddJsonProtocol();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseHttpsRedirection();
-
-app.MapControllers();
-app.MapHub<FlightsHub>("/hubs/flights");
-
-// DB migrate + seed
+// Миграцийг автоматаар ажиллуулна (seed ХИЙХГҮЙ)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDb>();
     db.Database.Migrate();
-    await DbSeeder.SeedAsync(db);
 }
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// HTTPS порт тодорхойгүй анхааруулга байвал алгасъя
+// app.UseHttpsRedirection();
+
+app.MapControllers();
 
 app.Run();
